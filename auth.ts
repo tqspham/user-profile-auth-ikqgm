@@ -1,37 +1,7 @@
-'use server';
-
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import bcrypt from 'bcryptjs';
 import { supabase } from '@/lib/supabase';
-
-const authorizeUser = async (email: string, password: string) => {
-  try {
-    const { data: user, error } = await supabase
-      .from('user_profile_auth_ikqgm_users')
-      .select('id, email, password_hash, name')
-      .eq('email', email)
-      .single();
-
-    if (error || !user) {
-      return null;
-    }
-
-    const passwordMatch = await bcrypt.compare(password, user.password_hash);
-
-    if (!passwordMatch) {
-      return null;
-    }
-
-    return {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-    };
-  } catch {
-    return null;
-  }
-};
+import bcrypt from 'bcryptjs';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
@@ -45,12 +15,30 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
-        const user = await authorizeUser(
-          credentials.email as string,
-          credentials.password as string
+        const { data: user, error } = await supabase
+          .from('user_profile_auth_ikqgm_users')
+          .select('id, email, password, name')
+          .eq('email', credentials.email)
+          .single();
+
+        if (error || !user) {
+          return null;
+        }
+
+        const passwordMatch = await bcrypt.compare(
+          credentials.password as string,
+          user.password
         );
 
-        return user;
+        if (!passwordMatch) {
+          return null;
+        }
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+        };
       },
     }),
   ],

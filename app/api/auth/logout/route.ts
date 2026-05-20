@@ -1,3 +1,5 @@
+'use server';
+
 import { signOut, auth } from '@/auth';
 import { NextRequest, NextResponse } from 'next/server';
 
