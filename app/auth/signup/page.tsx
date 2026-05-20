@@ -1,17 +1,17 @@
 import type { Metadata } from 'next';
-import { LoginForm } from '@/components/LoginForm';
+import { SignupForm } from '@/components/SignupForm';
 
 export const metadata: Metadata = {
-  title: 'Login',
-  description: 'Sign in to your account',
+  title: 'Sign Up',
+  description: 'Create a new account',
 };
 
-export default function LoginPage() {
+export default function SignupPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-(--color-background) py-12 px-4 sm:px-6 lg:px-8">
       <div className="w-full max-w-md">
-        <h1 className="text-center text-3xl font-bold mb-8 text-(--color-text)">Sign In</h1>
-        <LoginForm />
+        <h1 className="text-center text-3xl font-bold mb-8 text-(--color-text)">Create Account</h1>
+        <SignupForm />
       </div>
     </div>
   );

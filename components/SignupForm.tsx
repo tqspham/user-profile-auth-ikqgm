@@ -1,19 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { signIn } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Suspense } from 'react';
 
-function LoginFormContent() {
+export function SignupForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [passwordConfirm, setPasswordConfirm] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const signupSuccess = searchParams.get('signup') === 'success';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,19 +18,21 @@ function LoginFormContent() {
     setLoading(true);
 
     try {
-      const result = await signIn('credentials', {
-        email,
-        password,
-        redirect: false,
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, passwordConfirm }),
       });
 
-      if (!result?.ok) {
-        setError('Invalid email or password');
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || 'Signup failed. Please try again.');
         setLoading(false);
         return;
       }
 
-      router.push('/profile');
+      router.push('/login?signup=success');
     } catch {
       setError('An error occurred. Please try again.');
       setLoading(false);
@@ -42,12 +41,6 @@ function LoginFormContent() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {signupSuccess && (
-        <div className="rounded-[0.375rem] bg-(--color-success-light) p-4 border-l-4 border-(--color-success)" role="status">
-          <p className="text-sm font-medium text-(--color-success)">Account created successfully! Sign in with your credentials.</p>
-        </div>
-      )}
-
       {error && (
         <div className="rounded-[0.375rem] bg-(--color-danger-light) p-4 border-l-4 border-(--color-danger)" role="alert">
           <p className="text-sm font-medium text-(--color-danger)">{error}</p>
@@ -84,30 +77,37 @@ function LoginFormContent() {
         />
       </div>
 
+      <div>
+        <label htmlFor="passwordConfirm" className="block text-sm font-medium text-(--color-text) mb-2">
+          Confirm Password
+        </label>
+        <input
+          type="password"
+          id="passwordConfirm"
+          value={passwordConfirm}
+          onChange={(e) => setPasswordConfirm(e.target.value)}
+          required
+          className="w-full h-10 rounded-[0.375rem] border border-(--color-border) px-3 py-2 text-(--color-text) placeholder-(--color-muted-text) focus:outline-none focus:ring-2 focus:ring-(--color-secondary)"
+          placeholder="••••••••"
+        />
+      </div>
+
       <button
         type="submit"
         disabled={loading}
         className="w-full h-10 rounded-[0.375rem] bg-(--color-secondary) px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-secondary) disabled:opacity-50 disabled:cursor-not-allowed active:translate-y-0.5"
       >
-        {loading ? 'Signing in...' : 'Sign In'}
+        {loading ? 'Creating account...' : 'Sign Up'}
       </button>
 
       <div className="text-center">
         <p className="text-sm text-(--color-muted-text)">
-          Don&apos;t have an account?{' '}
-          <Link href="/auth/signup" className="text-(--color-secondary) hover:underline font-medium">
-            Create one
+          Already have an account?{' '}
+          <Link href="/login" className="text-(--color-secondary) hover:underline font-medium">
+            Sign in
           </Link>
         </p>
       </div>
     </form>
-  );
-}
-
-export function LoginForm() {
-  return (
-    <Suspense fallback={<div className="space-y-6"><div className="h-10 rounded-[0.375rem] bg-(--color-border) animate-pulse"></div><div className="h-10 rounded-[0.375rem] bg-(--color-border) animate-pulse"></div></div>}>
-      <LoginFormContent />
-    </Suspense>
   );
 }
